@@ -1,0 +1,6 @@
+@MesProject_HostAddress = http://localhost:5188
+
+GET {{MesProject_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
