@@ -608,9 +608,21 @@ export default function App() {
 
     const handleWithdraw = async () => {
         if (!window.confirm("정말로 탈퇴하시겠습니까? 계정과 모든 작성 글이 영구 삭제됩니다!")) return;
+
+        const password = window.prompt("비밀번호를 입력해주세요.");
+
+
         try {
-            const res = await fetch(`${API_BASE_URL}/withdraw/${currentUser.userId || currentUser.UserId}`, { method: 'DELETE' });
+            const res = await fetch(`${API_BASE_URL}/UserDelete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    UserId: currentUser.UserId || currentUser.userId,
+                    Password: password
+                })
+            });
             if (res.ok) {
+
                 handleLogout();
                 showNotice("🗑️ 회원 탈퇴 및 데이터 삭제 완료.");
             }

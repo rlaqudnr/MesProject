@@ -302,7 +302,7 @@ namespace MesProject.Dao
 
                        FROM Part_Mst M
 
-I         NNER JOIN BOM_Mst B ON M.partId = B.partId
+        INNER JOIN BOM_Mst B ON M.partId = B.partId
 
           ORDER BY B.ModelId, M.partId";
 
@@ -393,6 +393,19 @@ I         NNER JOIN BOM_Mst B ON M.partId = B.partId
             const string sql = "DELETE FROM T_BOARD WHERE PostNo = @PostNo AND UserId = @UserId";
 
             return (await conn.ExecuteAsync(sql, new { PostNo = postNo, UserId = userId })) > 0;
+
+
+        }
+
+        //회원탈퇴
+        public async Task<bool> DeleteUser(LoginRequest dto)
+        {
+
+            using var conn = new SqlConnection(_connStr);
+            // PostNo만 체크하는 게 아니라 UserId까지 체크해서 남의 글 삭제 방지! 
+            const string sql = "DELETE FROM T_USER WHERE UserId = @UserId AND Password = @Password";
+
+            return (await conn.ExecuteAsync(sql, dto)) > 0;
 
 
         }

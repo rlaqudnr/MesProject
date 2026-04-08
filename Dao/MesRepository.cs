@@ -1,4 +1,5 @@
 ﻿using MesProject.Dto;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MesProject.Dao
 {
@@ -33,8 +34,9 @@ namespace MesProject.Dao
 
         Task<UserDto> LoginAsync(LoginRequest dto);
 
+        Task<bool>DeleteUser(LoginRequest dto);
 
-
+    
 
 
     }

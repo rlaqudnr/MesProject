@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MesProject.Controllers
 {
-    
+
     [Route("api/mes")]
     [ApiController]
     public class MesController(MesRepository repo) : ControllerBase
@@ -27,7 +27,7 @@ namespace MesProject.Controllers
             }
         }
 
-        
+
         // 현장 PDA에서 작업 목록
         [HttpGet("pda-list")]
         public async Task<IActionResult> GetPdaList()
@@ -39,7 +39,7 @@ namespace MesProject.Controllers
             }
             catch (Exception ex)
             {
-               
+
                 return StatusCode(500, new { message = ex.Message });
             }
         }
@@ -50,7 +50,7 @@ namespace MesProject.Controllers
         {
             try
             {
-               
+
                 var success = await _repo.TransferToWarehouseAsync(dto);
 
                 if (success)
@@ -65,7 +65,7 @@ namespace MesProject.Controllers
             catch (Exception ex)
             {
                 // 예상치 못한 서버 에러 발생 시
-                return  StatusCode(500, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
@@ -87,7 +87,7 @@ namespace MesProject.Controllers
             }
         }
 
-     
+
         [HttpGet("defect-list")]
         public async Task<IActionResult> GetDefectList()
         {
@@ -154,7 +154,7 @@ namespace MesProject.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-         //글 작성
+        //글 작성
         [HttpPost("board")]
         public async Task<IActionResult> CreateBoard([FromBody] BoardDto dto)
         {
@@ -186,7 +186,7 @@ namespace MesProject.Controllers
             }
         }
 
-            [HttpPost("signup")]
+        [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromBody] UserDto dto)
         {
             if (!ModelState.IsValid)
@@ -200,14 +200,14 @@ namespace MesProject.Controllers
             try
             {
 
-              
+
 
                 // 형님이 만든 RegisterUserAsync 호출 
                 var success = await _repo.RegisterUserAsync(dto);
 
                 if (success)
                 {
-                    
+
 
                     return Ok(new { message = "회원가입 성공! '슈웃' 하십쇼!" });
                 }
@@ -222,22 +222,22 @@ namespace MesProject.Controllers
         }
 
         // 2. 로그인 API 
-        
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest dto)
         {
             try
             {
-             
 
 
-                
+
+
                 var user = await _repo.LoginAsync(dto);
 
                 if (user != null)
                 {
-                    
-                  
+
+
                     return Ok(user);
                 }
 
@@ -249,12 +249,45 @@ namespace MesProject.Controllers
                 return StatusCode(500, new { message = "서버 내부 오류: " + ex.Message });
             }
         }
+
+        // 2. 아이디삭제 API 
+
+        [HttpPost("UserDelete")]
+        public async Task<IActionResult> DeleteUser([FromBody] LoginRequest dto)
+        {
+            try
+            {
+
+                // 1. 먼저 이 유저가 맞는지 로그인 로직으로 확인 ㅋ
+                var user = await _repo.LoginAsync(dto);
+
+                if (user != null)
+                {
+                    // 2. 인증 성공! 이제 진짜 DB에서 삭제 시전 ㅋ
+                    bool isDeleted = await _repo.DeleteUser(dto);
+
+                    if (isDeleted)
+                    {
+                        return Ok(new { message = "탈퇴 처리가 완료되었습니다. 슈웃! ㅋ" });
+                    }
+                    return BadRequest(new { message = "DB 삭제 중 오류가 발생했습니다. ㅋ" });
+                }
+
+                // 3. 인증 실패 (ID/PW 불일치) ㅋ
+                return Unauthorized(new { message = "아이디 또는 비밀번호가 틀렸습니다. ㅋ" });
+            }
+            catch (Exception ex)
+            {
+                // 4. 서버 터졌을 때 ㅋ
+                return StatusCode(500, new { message = "서버 내부 오류: " + ex.Message });
+            }
+        }
+
     }
 }
 
 
 
-    
 
 
 
@@ -264,7 +297,7 @@ namespace MesProject.Controllers
 
 
 
-   
 
 
-   
+
+
