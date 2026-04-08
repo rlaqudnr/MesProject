@@ -291,40 +291,181 @@ const Issue = ({ onShowNotice, currentUser }) => {
         </div>
     );
 };
+
+const ProgressItem = ({ label, value, color }) => (
+    <div className="mb-4">
+        <div className="flex justify-between mb-1">
+            <span className="text-sm font-medium text-gray-700">{label}</span>
+            <span className="text-sm font-bold text-gray-900">{value}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+                className={`h-2 rounded-full transition-all duration-500 ${color}`}
+                style={{ width: `${value}%` }}
+            ></div>
+        </div>
+    </div>
+);
+
 // --- 📊 2. Dash Component ---
 
-const Dash = ({ inventoryList = [], finishedList = [], defectList = [], loading, onRefresh }) => {
+const Dash = ({ inventoryList, finishedList, defectList, pdaJobs, loading, onRefresh }) => {
+    // 💡 DB에서 넘어온 데이터를 기반으로 실시간 통계 계산
     const stats = useMemo(() => {
-        const totalProduced = finishedList.reduce((acc, cur) => acc + (cur.Qty || cur.qty || cur.StockQty || 0), 0);
-        const totalDefects = defectList.reduce((acc, cur) => acc + (cur.Qty || cur.qty || 0), 0);
+        const totalProduced = finishedList.length;
+        const totalDefects = defectList.length;
         const totalInbound = inventoryList.reduce((acc, cur) => acc + (cur.StockQty || cur.stockQty || 0), 0);
-        const yieldRate = (totalProduced + totalDefects) > 0 ? ((totalProduced / (totalProduced + totalDefects)) * 100).toFixed(1) : "100.0";
-        return { totalProduced, totalDefects, totalInbound, yieldRate };
+
+        // 수율 계산: (정상 / (정상+불량)) * 100
+        const yieldRate = (totalProduced + totalDefects) > 0
+            ? ((totalProduced / (totalProduced + totalDefects)) * 100).toFixed(1)
+            : "100.0";
+
+        // 💡 날짜별 생산량 계산 (최근 7일 추이)
+        const dailyStats = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
+
+            // DB의 InDate가 YYYY-MM-DD 형식을 포함하는지 체크
+            const dayProduced = finishedList.filter(item => {
+                const itemDate = (item.InDate || item.inDate || "");
+                return itemDate.startsWith(dateStr);
+            }).length;
+
+            return { date: dateStr.slice(5), qty: dayProduced }; // MM-DD 형식으로 표시
+        }).reverse();
+
+
+        return { totalProduced, totalDefects, totalInbound, yieldRate, dailyStats };
     }, [inventoryList, finishedList, defectList]);
 
     return (
-        <div className="p-10 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20 text-left">
-            <div className="flex items-center justify-between text-slate-900 font-black tracking-tighter uppercase italic leading-none font-black text-slate-900 font-black">
-                <div className="text-left text-slate-900">
-                    <h2 className="text-3xl font-black italic text-slate-900 tracking-tighter uppercase leading-none font-black">Intelligence Center</h2>
-                    <div className="text-[10px] text-slate-400 font-bold tracking-[0.3em] mt-2 flex items-center gap-2 uppercase font-bold">
+        <div className="p-10 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
+            {/* 헤더 */}
+            <div className="flex items-center justify-between">
+                <div className="text-left">
+                    <h2 className="text-3xl font-black italic text-slate-900 tracking-tighter uppercase leading-none">Intelligence<br />Center</h2>
+                    <p className="text-[10px] text-slate-400 font-bold tracking-[0.3em] mt-2 flex items-center gap-2">
                         <Activity size={12} className="text-blue-500 animate-pulse" /> REALTIME FACTORY ANALYTICS
-                    </div>
+                    </p>
                 </div>
-                <button onClick={onRefresh} className="p-4 bg-white border border-slate-100 rounded-3xl shadow-sm text-slate-400 hover:text-blue-600 transition-all hover:rotate-180 duration-500 font-bold uppercase italic leading-none">
+                <button onClick={onRefresh} className="p-4 bg-white border border-slate-100 rounded-3xl shadow-sm text-slate-400 hover:text-blue-600 transition-all hover:rotate-180 duration-500">
                     <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-slate-800 font-black italic leading-none">
-                <StatCard label="완성차 재고" value={stats.totalProduced} unit="Units" icon={Truck} color="blue" trend="+12%" />
-                <StatCard label="불량 격리수" value={stats.totalDefects} unit="Cases" icon={XCircle} color="red" trend="Alert" />
-                <StatCard label="부품 총 재고" value={stats.totalInbound} unit="Parts" icon={Package} color="amber" trend="Optimal" />
+
+            {/* 통계 카드 섹션 */}
+            <div className="grid grid-cols-4 gap-6">
+                <StatCard label="완성차 창고" value={stats.totalProduced} unit="Units" icon={Truck} color="blue" trend="Live" />
+                <StatCard label="불량 격리소" value={stats.totalDefects} unit="Cases" icon={XCircle} color="red" trend={`${((stats.totalDefects / (stats.totalProduced || 1)) * 100).toFixed(1)}%`} />
+                <StatCard label="부품 재고 합계" value={stats.totalInbound} unit="Parts" icon={Package} color="amber" trend="Stock" />
                 <StatCard label="공정 수율" value={stats.yieldRate} unit="%" icon={ShieldCheck} color="emerald" trend="Safe" />
+            </div>
+
+            <div className="grid grid-cols-3 gap-10">
+                {/* 생산량 추이 그래프 */}
+                <div className="col-span-2 bg-white rounded-[4rem] p-12 shadow-sm border border-slate-50 flex flex-col h-[480px]">
+                    <div className="flex justify-between items-start mb-12 text-left">
+                        <div>
+                            <h3 className="text-2xl font-black italic text-slate-800 uppercase tracking-tighter">Production Trend</h3>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">실제 DB 입고일(InDate) 기준 최근 7일 통계</p>
+                        </div>
+                        <div className="bg-slate-50 p-2 rounded-2xl flex gap-1">
+                            <button className="px-4 py-2 bg-white shadow-sm rounded-xl text-[10px] font-black uppercase text-blue-600">Daily</button>
+                            <button className="px-4 py-2 text-[10px] font-black uppercase text-slate-400">Weekly</button>
+                        </div>
+                    </div>
+                    <div className="flex-1 flex items-end gap-8 pb-4">
+                        {stats.dailyStats.map((d, i) => {
+                            const maxQty = Math.max(...stats.dailyStats.map(x => x.qty)) || 1;
+                            const barHeight = (d.qty / maxQty) * 250;
+                            return (
+                                <div key={i} className="flex-1 flex flex-col items-center gap-4 group cursor-pointer">
+                                    <div className="relative w-full flex flex-col justify-end items-center">
+                                        <div
+                                            style={{ height: `${barHeight}px`, minHeight: d.qty > 0 ? '4px' : '0' }}
+                                            className="w-full max-w-[40px] bg-slate-900 rounded-t-2xl transition-all duration-1000 delay-100 group-hover:bg-blue-600 group-hover:shadow-[0_0_30px_rgba(37,99,235,0.3)]"
+                                        />
+                                        <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-all bg-slate-900 text-white text-[10px] font-black px-3 py-1 rounded-lg">
+                                            {d.qty} Units
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-tighter">{d.date}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* 창고 점유 및 부족 알림 */}
+                <div className="space-y-6">
+                    <div className="bg-slate-900 rounded-[3.5rem] p-10 text-white relative overflow-hidden h-[230px] flex flex-col justify-between shadow-2xl text-left">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/20 blur-[80px] rounded-full" />
+                        <div>
+                            <div className="flex items-center gap-2 text-blue-400 mb-2">
+                                <PieChart size={16} />
+                                <span className="text-[10px] font-black uppercase tracking-widest italic">Space utilization</span>
+                            </div>
+                            <h3 className="text-xl font-black italic tracking-tighter uppercase">Warehouse Load</h3>
+                        </div>
+                        <div className="space-y-4 relative">
+                            <ProgressItem label="FINISHED WH" val={Math.min(stats.totalProduced * 2, 100)} color="bg-blue-500" />
+                            <ProgressItem label="PARTS WH" val={Math.min(Math.floor(stats.totalInbound / 100), 100)} color="bg-amber-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-[3.5rem] p-10 shadow-sm border border-slate-100 h-[225px] flex flex-col overflow-hidden text-left">
+                        <div className="flex items-center gap-2 mb-6">
+                            <div className="w-8 h-8 bg-red-50 text-red-500 rounded-xl flex items-center justify-center"><AlertTriangle size={16} /></div>
+                            <h3 className="text-lg font-black italic uppercase tracking-tighter text-slate-800">Critical Stock</h3>
+                        </div>
+                        <div className="flex-1 overflow-auto space-y-3 pr-2 scrollbar-hide">
+                            {inventoryList.filter(p => (p.StockQty || p.stockQty) < 100).map((p, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-3xl border border-slate-100 group hover:border-red-200 transition-colors">
+                                    <span className="text-[10px] font-black text-slate-700 uppercase">{p.PartId || p.partId}</span>
+                                    <span className="text-xs font-black text-red-600 italic tracking-tighter animate-pulse">Low: {p.StockQty || p.stockQty}</span>
+                                </div>
+                            ))}
+                            {inventoryList.filter(p => (p.StockQty || p.stockQty) < 100).length === 0 && (
+                                <div className="py-10 text-center flex flex-col items-center gap-2 opacity-20">
+                                    <Zap size={32} />
+                                    <p className="text-[9px] font-black uppercase tracking-widest">Stock Safe</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 실시간 로그 섹션 */}
+            <div className="bg-white rounded-[4rem] p-12 shadow-sm border border-slate-50">
+                <div className="flex items-center justify-between mb-10 text-left">
+                    <h3 className="text-xl font-black italic text-slate-800 uppercase tracking-tighter">Realtime Operations</h3>
+                    <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping" />
+                        <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest">Database Linked</span>
+                    </div>
+                </div>
+                <div className="grid grid-cols-5 gap-6">
+                    {finishedList.slice(0, 5).map((log, i) => (
+                        <div key={i} className="bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100 relative overflow-hidden group hover:bg-slate-900 transition-all duration-500 text-left">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 group-hover:text-blue-500 transition-all">
+                                <ArrowUpRight size={20} />
+                            </div>
+                            <p className="text-[9px] font-black text-slate-400 group-hover:text-white/40 uppercase mb-2">Production Done</p>
+                            <h5 className="text-lg font-black text-slate-800 group-hover:text-white uppercase italic tracking-tighter mb-1 leading-tight">{log.ModelId || log.modelId}</h5>
+                            <p className="text-[10px] font-mono text-blue-600 font-bold group-hover:text-blue-400">{log.LotId || log.lotId}</p>
+                        </div>
+                    ))}
+                    {finishedList.length === 0 && (
+                        <div className="col-span-5 py-10 text-center text-slate-300 font-black uppercase italic tracking-widest opacity-30">No Recent Production Data</div>
+                    )}
+                </div>
             </div>
         </div>
     );
 };
-
 // --- 📦 3. Stock Component (차종/모델 강조 UI) ---
 
 const Stock = ({ tab, setTab, inventoryList = [], finishedList = [], defectList = [], searchTerm, setSearchTerm, loading, fetchAllStocks, onShowNotice }) => {
