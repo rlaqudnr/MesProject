@@ -6,10 +6,6 @@ C:\Users\HOME\source\repos\MesProject\MesProject\obj\Debug\net8.0\MesProject.csp
 C:\Users\HOME\source\repos\MesProject\MesProject\obj\Debug\net8.0\MesProject.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\HOME\source\repos\MesProject\MesProject\obj\Debug\net8.0\MesProject.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\HOME\source\repos\MesProject\MesProject\obj\Debug\net8.0\MesProject.sourcelink.json
-C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\appsettings.Development.json
-C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\appsettings.json
-C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\package-lock.json
-C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\package.json
 C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\MesProject.exe
 C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\MesProject.deps.json
 C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\MesProject.runtimeconfig.json
@@ -145,3 +141,7 @@ C:\Users\HOME\source\repos\MesProject\MesProject\obj\Debug\net8.0\refint\MesProj
 C:\Users\HOME\source\repos\MesProject\MesProject\obj\Debug\net8.0\MesProject.pdb
 C:\Users\HOME\source\repos\MesProject\MesProject\obj\Debug\net8.0\MesProject.genruntimeconfig.cache
 C:\Users\HOME\source\repos\MesProject\MesProject\obj\Debug\net8.0\ref\MesProject.dll
+C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\Front\appsettings.Development.json
+C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\Front\appsettings.json
+C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\Front\package-lock.json
+C:\Users\HOME\source\repos\MesProject\MesProject\bin\Debug\net8.0\Front\package.json

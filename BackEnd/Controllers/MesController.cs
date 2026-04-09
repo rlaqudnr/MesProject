@@ -142,19 +142,19 @@ namespace MesProject.Controllers
         }
 
         //글 불러오기
-        [HttpGet("board")]
-        public async Task<IActionResult> GetBoardList()
-        {
-            try
+            [HttpGet("board")]
+            public async Task<IActionResult> GetBoardList()
             {
-                var list = await _repo.GetBoardListAsync();
-                return Ok(list);
+                try
+                {
+                    var list = await _repo.GetBoardListAsync();
+                    return Ok(list);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
         //글 작성
         [HttpPost("board")]
         public async Task<IActionResult> CreateBoard([FromBody] BoardDto dto)
