@@ -36,7 +36,24 @@ namespace MesProject.Dao
 
         Task<bool>DeleteUser(LoginRequest dto);
 
-    
+
+        Task<IEnumerable<CommentDto>> GetComments(int postNo);
+
+
+        Task<bool> AddComment(int postNo,CommentDto dto);
+
+
+        Task<bool> DeleteCommnets(int postNo,  CommentDto dto);
+
+        Task<bool> AlterComment(int postNo, CommentDto dto);
+
+        Task<bool> DeleteBoard(int postNo, BoardDto dto);
+
+        Task<bool> AlterBoard(int postNo, BoardDto dto);
+
+
+
+
 
 
     }

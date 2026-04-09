@@ -2,6 +2,7 @@
 using MesProject.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Xml.Linq;
 
 namespace MesProject.Controllers
 {
@@ -202,7 +203,7 @@ namespace MesProject.Controllers
 
 
 
-                // 형님이 만든 RegisterUserAsync 호출 
+                //  RegisterUserAsync 호출 
                 var success = await _repo.RegisterUserAsync(dto);
 
                 if (success)
@@ -282,6 +283,157 @@ namespace MesProject.Controllers
                 return StatusCode(500, new { message = "서버 내부 오류: " + ex.Message });
             }
         }
+
+
+
+        [HttpGet("board/{postNo}/comments")]
+        public async Task<IActionResult> GetComments(int postNo)
+        {
+            try
+            {
+                // Repository의 DAO 로직 호출
+                var list = await _repo.GetComments(postNo);
+
+                // 성공 시 200 OK와 함께 데이터 반환
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                // 에러 발생 시 500 에러 반환
+                return StatusCode(500, new { message = "댓글 로드 실패", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 새로운 댓글을 등록합니다.
+        /// POST: api/mes/board/comments
+        /// </summary>
+        ///     ${API_BASE_URL}/board/${pNo}/comments
+        [HttpPost("board/{postNo}/comments")]
+        public async Task<IActionResult> AddComment(int postNo, [FromBody] CommentDto dto)
+        {
+            try
+            {
+                if (dto == null || string.IsNullOrEmpty(dto.Content))
+                {
+                    return BadRequest(new { message = "내용을 입력해주세요." });
+                }
+
+                // Repository의 DAO 로직 호출
+                var isSuccess = await _repo.AddComment(postNo,dto);
+
+                if (isSuccess)
+                {
+                    return Ok(new { message = "댓글이 등록되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "댓글 등록에 실패했습니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "서버 에러 발생", detail = ex.Message });
+            }
+        }
+
+
+
+ 
+
+//댓글삭제
+       [HttpDelete("board/comments/{postNo}")]
+        public async Task<IActionResult> DeleteCommnets(int postNo, [FromQuery] CommentDto dto)
+        {
+            try
+            {
+                // Repository의 DAO 로직 호출
+                var list = await _repo.DeleteCommnets(postNo,dto);
+
+                // 성공 시 200 OK와 함께 데이터 반환
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                // 에러 발생 시 500 에러 반환
+                return StatusCode(500, new { message = "댓글 삭제 실패", detail = ex.Message });
+            }
+        }
+
+        //댓글수정
+        [HttpPut("board/{postNo}/comments")]
+        public async Task<IActionResult> AlterComment(int postNo, CommentDto dto)
+        {
+            try
+            {
+             
+
+                // Repository의 DAO 로직 호출
+                var isSuccess = await _repo.AlterComment(postNo, dto);
+
+                if (isSuccess)
+                {
+                    return Ok(new { message = "댓글이 수정되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "댓글 삭제에 실패했습니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "서버 에러 발생", detail = ex.Message });
+            }
+        }
+
+
+
+        //글삭제
+        [HttpDelete("board/{postNo}")]
+        public async Task<IActionResult> DeleteBoard(int postNo,[FromQuery] BoardDto dto )
+        {
+            try
+            {
+                // Repository의 DAO 로직 호출
+                var list = await _repo.DeleteBoard (postNo,dto);
+
+                // 성공 시 200 OK와 함께 데이터 반환
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                // 에러 발생 시 500 에러 반환
+                return StatusCode(500, new { message = "댓글 삭제 실패", detail = ex.Message });
+            }
+        }
+
+        //글수정
+        [HttpPut("board/{postNo}")]
+        public async Task<IActionResult> AltertBoard(int postNo, BoardDto dto)
+        {
+            try
+            {
+
+
+                // Repository의 DAO 로직 호출
+                var isSuccess = await _repo.AlterBoard(postNo,dto);
+
+                if (isSuccess)
+                {
+                    return Ok(new { message = "댓글이 수정되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "댓글 삭제에 실패했습니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "서버 에러 발생", detail = ex.Message });
+            }
+        }
+
+
 
     }
 }

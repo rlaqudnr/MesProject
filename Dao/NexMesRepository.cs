@@ -1,6 +1,8 @@
 ﻿using Dapper;
 using MesProject.Dto;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using System.ComponentModel.Design;
 namespace MesProject.Dao
 {
     public class NexMesRepository : MesRepository
@@ -156,7 +158,7 @@ namespace MesProject.Dao
 
                     string lotId = $"LOT-{DateTime.Now:yyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
 
-                    
+
 
                     var finishedData = new FinishedStockDto
 
@@ -178,7 +180,7 @@ namespace MesProject.Dao
 
          VALUES (@LotId, @JobId, @ModelId, @Qty, GETDATE(), 0)";
 
-                    
+
 
                     await conn.ExecuteAsync(sqlPass, finishedData, trans);
 
@@ -258,7 +260,7 @@ namespace MesProject.Dao
 
                     new { type = dto.Result, msg = $"지시 {dto.JobId} 창고 이동 완료 ({dto.Result})" }, trans);
 
-                
+
 
                 trans.Commit();
 
@@ -274,7 +276,7 @@ namespace MesProject.Dao
 
                 if (trans.Connection != null) trans.Rollback();
 
-                
+
 
                 throw new Exception(ex.Message);
 
@@ -295,6 +297,7 @@ namespace MesProject.Dao
             // STRING_AGG를 써서 해당 부품이 들어가는 모델들을 한 칸에 콤마로 찍어옵니다. 
             const string sql = @"
              SELECT M.partId, M.category, 
+             M.RegDate AS RegDate,
 
              ISNULL(M.stockQty, 0) AS StockQty,
    
@@ -318,7 +321,7 @@ namespace MesProject.Dao
              
                 UPDATE Part_Mst
                 SET stockQty = ISNULL(stockQty, 0) + @Qty
-                   
+                   ,RegDate = GETDATE()
                 WHERE partId = @PartId";
             return (await conn.ExecuteAsync(sql, dto)) > 0;
         }
@@ -338,7 +341,14 @@ namespace MesProject.Dao
         {
 
             using var conn = new SqlConnection(_connStr);
-            const string sql = "SELECT * FROM T_BOARD ORDER BY RegDate DESC";
+            const string sql = @"
+                  SELECT 
+                    p.*, 
+                    (SELECT COUNT(*) 
+                     FROM T_Board_Comments c 
+                     WHERE c.PostNo = p.PostNo) AS CommentCount
+                FROM T_Board p
+                ORDER BY p.RegDate DESC";
             return await conn.QueryAsync<BoardDto>(sql);
 
 
@@ -409,7 +419,120 @@ namespace MesProject.Dao
 
 
         }
-    }
 
+
+
+        //댓글조회
+        public async Task<IEnumerable<CommentDto>> GetComments(int postNo)
+        {
+            using var conn = new SqlConnection(_connStr);
+            const string sql = @"
+                SELECT 
+                    c.CommentId, c.PostNo, c.UserId, u.UserName, c.Content, c.RegDate
+                FROM T_Board_Comments c
+                INNER JOIN T_User u ON c.UserId = u.UserId
+                WHERE c.PostNo = @postNo
+                ORDER BY c.RegDate DESC";
+
+            return await conn.QueryAsync<CommentDto>(sql, new { postNo });
+        }
+
+        //댓글작성
+        public async Task<bool> AddComment(int postNo, [FromBody] CommentDto dto)
+        {
+            using var conn = new SqlConnection(_connStr);
+            const string sql = @"
+                INSERT INTO T_Board_Comments (PostNo, UserId, Content)
+                VALUES (@PostNo, @UserId, @Content)";
+
+            return (await conn.ExecuteAsync(sql, dto)) > 0;
+        }
+
+        //댓글삭제
+        public async Task<bool> DeleteCommnets(int commentId, CommentDto dto)
+        {
+            using var conn = new SqlConnection(_connStr);
+            // PostNo만 체크하는 게 아니라 UserId까지 체크해서 남의 글 삭제 방지! 
+            const string sql = "DELETE FROM T_Board_Comments WHERE CommentId = @CommentId AND UserId = @UserId";
+
+            var affected = await conn.ExecuteAsync(sql, new
+            {
+                CommentId = commentId,
+                UserId = dto.UserId,
+              
+            });
+            return affected > 0;
+
+
+        }
+
+
+        //댓글수정
+        public async Task<bool> AlterComment(int commentId, CommentDto dto)
+        {
+            using var conn = new SqlConnection(_connStr);
+            const string sql = @"
+                UPDATE T_Board_Comments 
+                SET Content = @Content,
+                    RegDate = GETDATE()
+                WHERE CommentId = @CommentId 
+                  AND UserId = @UserId";
+
+            var affected = await conn.ExecuteAsync(sql, new
+            {
+                CommentId = commentId,
+                UserId = dto.UserId,
+                Content = dto.Content
+            });
+            return affected > 0;
+        }
+
+
+        //글삭제
+        public async Task<bool> DeleteBoard(int PostNo, BoardDto dto)
+        {
+
+
+            using var conn = new SqlConnection(_connStr);
+            // PostNo만 체크하는 게 아니라 UserId까지 체크해서 남의 글 삭제 방지! 
+            const string sql = "DELETE FROM T_Board WHERE PostNo = @PostNo AND UserId = @UserId";
+
+            var affected = await conn.ExecuteAsync(sql, new
+            {
+                PostNo = PostNo,
+                UserId = dto.UserId,
+
+            });
+            return affected > 0;
+        }
+
+        //글수정
+
+        public async Task<bool> AlterBoard(int PostNo,BoardDto dto)
+        {
+
+
+            using var conn = new SqlConnection(_connStr);
+            const string sql = @"
+                UPDATE T_Board
+                SET Content = @Content,
+                     Title = @Title,
+                    RegDate = GETDATE()
+                   
+                WHERE PostNo = @PostNo 
+                  AND UserId = @UserId";
+
+            var affected = await conn.ExecuteAsync(sql, new
+            {
+                PostNo = PostNo,
+                UserId = dto.UserId,
+                Content = dto.Content,
+                Title = dto.Title
+            }); ;
+            return affected > 0;
+        }
+    }
+    
 }
+
 

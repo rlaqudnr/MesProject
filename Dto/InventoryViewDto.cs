@@ -7,7 +7,7 @@
         public int StockQty { get; set; }       // 현재고 (My_Inventory)
         public string Models { get; set; }      // 이 부품을 사용하는 차종 리스트 (BOM_Mst에서 취합)
 
-
+        public DateTime RegDate { get; set; }  // 작성일
 
 
     }

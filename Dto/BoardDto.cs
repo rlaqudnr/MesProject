@@ -8,8 +8,10 @@
         public string? UserName { get; set; }  // 작성자 이름 (표시용)
         public string? Type { get; set; }      // 구분 (NOTICE, ISSUE 등)
         public string? Title { get; set; }     // 제목
+
+        public int? CommentCount { get; set; }
         public string? Content { get; set; }   // 내용
-        public DateTime RegDate { get; set; }  // 작성일
+        public DateTime? RegDate { get; set; }  // 작성일
 
 
 

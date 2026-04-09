@@ -9,5 +9,7 @@
         public int Qty { get; set; }
         public string Reason { get; set; }
         public DateTime RegDate { get; set; }
+
+
     }
 }
