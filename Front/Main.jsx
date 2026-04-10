@@ -115,7 +115,7 @@ const Issue = ({ onShowNotice, currentUser }) => {
     const [editingCommentId, setEditingCommentId] = useState(null);
     const [editContent, setEditContent] = useState('');
 
-    // 사용자 정보 추출 (대소문자 방어 코드)
+    // 사용자 정보 추출
     const myId = currentUser?.UserId || currentUser?.userId || "";
     const myName = currentUser?.UserName || currentUser?.userName || "";
     const isAdmin = useMemo(() => myId.toLowerCase() === 'admin', [myId]);
@@ -149,7 +149,7 @@ const Issue = ({ onShowNotice, currentUser }) => {
         if (pId) { fetchComments(pId); setCommentPage(1); setIsEditingPost(false); }
     }, [selectedPost, fetchComments]);
 
-    // 🔥 정렬 로직: 공지사항(NOTICE)을 최상단으로, 나머지는 최신순
+    // 정렬 로직
     const sortedPosts = useMemo(() => {
         return [...posts].sort((a, b) => {
             const aType = (a.Type || a.type || "").toUpperCase();
@@ -170,12 +170,7 @@ const Issue = ({ onShowNotice, currentUser }) => {
             const res = await fetch(`${API_BASE_URL}/board`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // 🔥 UserName 포함
-                body: JSON.stringify({
-                    ...newPost,
-                    UserId: myId,
-                    UserName: myName
-                })
+                body: JSON.stringify({ ...newPost, UserId: myId, UserName: myName })
             });
             if (res.ok) {
                 onShowNotice("글이 등록되었습니다.");
@@ -201,13 +196,7 @@ const Issue = ({ onShowNotice, currentUser }) => {
             const res = await fetch(`${API_BASE_URL}/board/${pId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                // 🔥 UserName 포함
-                body: JSON.stringify({
-                    UserId: myId,
-                    UserName: myName,
-                    Title: editPostTitle,
-                    Content: editPostContent
-                })
+                body: JSON.stringify({ UserId: myId, UserName: myName, Title: editPostTitle, Content: editPostContent })
             });
             if (res.ok) {
                 setIsEditingPost(false);
@@ -225,13 +214,7 @@ const Issue = ({ onShowNotice, currentUser }) => {
             const res = await fetch(`${API_BASE_URL}/board/${targetPostNo}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // 🔥 UserName 포함
-                body: JSON.stringify({
-                    PostNo: targetPostNo,
-                    UserId: myId,
-                    UserName: myName,
-                    Content: commentInput.trim()
-                })
+                body: JSON.stringify({ PostNo: targetPostNo, UserId: myId, UserName: myName, Content: commentInput.trim() })
             });
             if (res.ok) { setCommentInput(''); fetchComments(targetPostNo); }
         } catch (e) { }
@@ -250,18 +233,12 @@ const Issue = ({ onShowNotice, currentUser }) => {
             const res = await fetch(`${API_BASE_URL}/board/${commentId}/comments`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                // 🔥 UserName 포함
-                body: JSON.stringify({
-                    UserId: myId,
-                   
-                    Content: editContent.trim()
-                })
+                body: JSON.stringify({ UserId: myId, UserName: myName, Content: editContent.trim() })
             });
             if (res.ok) { setEditingCommentId(null); fetchComments(selectedPost?.PostNo ?? selectedPost?.postNo); }
         } catch (e) { }
     };
 
-    // --- 페이징 계산 ---
     const currentPosts = useMemo(() => {
         return sortedPosts.slice((postPage - 1) * postsPerPage, postPage * postsPerPage);
     }, [sortedPosts, postPage]);
@@ -269,8 +246,6 @@ const Issue = ({ onShowNotice, currentUser }) => {
     const pagedComments = useMemo(() => {
         return comments.slice((commentPage - 1) * commentsPerPage, commentPage * commentsPerPage);
     }, [comments, commentPage]);
-
-    // --- UI 렌더링 ---
 
     // 1. 글쓰기 화면
     if (isWriting) {
@@ -322,7 +297,9 @@ const Issue = ({ onShowNotice, currentUser }) => {
     // 2. 글 상세 보기 화면
     if (selectedPost) {
         const postOwnerId = selectedPost.UserId || selectedPost.userId;
-        const isPostAuthor = postOwnerId === myId || isAdmin;
+
+        // 🔥 [관리자 권한 박탈] 오직 본인(myId)인 경우에만 Author 권한 부여
+        const isPostAuthor = postOwnerId === myId;
 
         return (
             <div className="max-w-5xl mx-auto bg-white min-h-screen text-left font-sans border-x border-slate-100 animate-in fade-in duration-300">
@@ -350,18 +327,16 @@ const Issue = ({ onShowNotice, currentUser }) => {
                                     <span className="text-slate-700 font-bold pr-3 border-r border-slate-200">{selectedPost.UserName || selectedPost.userName}</span>
                                     <span className="px-3 border-r border-slate-200">{new Date(selectedPost.RegDate || selectedPost.regDate).toLocaleString()}</span>
                                     <span className="px-3">조회 {(selectedPost.Views || 0) + 1}</span>
+                                    {/* 💡 작성자 본인일 때만 수정/삭제 노출 */}
                                     {isPostAuthor && (
-                                        <div className="ml-auto flex gap-3"><button onClick={() => { setIsEditingPost(true); setEditPostTitle(selectedPost.Title); setEditPostContent(selectedPost.Content); }} className="hover:text-indigo-600 font-bold">수정</button><button onClick={handleDeletePost} className="hover:text-red-500 font-bold">삭제</button></div>
+                                        <div className="ml-auto flex gap-3">
+                                            <button onClick={() => { setIsEditingPost(true); setEditPostTitle(selectedPost.Title); setEditPostContent(selectedPost.Content); }} className="hover:text-indigo-600 font-bold">수정</button>
+                                            <button onClick={handleDeletePost} className="hover:text-red-500 font-bold">삭제</button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
                             <div className="py-6 text-slate-800 text-sm md:text-base leading-relaxed whitespace-pre-wrap min-h-[300px]">{selectedPost.Content || selectedPost.content}</div>
-                            <div className="py-10 flex justify-center border-b border-slate-100 mb-8">
-                                <button className="flex flex-col items-center justify-center w-16 h-16 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all group active:scale-95">
-                                    <ThumbsUp size={20} className="mb-1 text-slate-300 group-hover:text-indigo-600" />
-                                    <span className="text-xs font-bold text-slate-400 group-hover:text-indigo-600">{(selectedPost.Likes || 0)}</span>
-                                </button>
-                            </div>
                         </div>
                     )}
 
@@ -370,17 +345,28 @@ const Issue = ({ onShowNotice, currentUser }) => {
                         <div className="space-y-0 border-t border-slate-100 mb-8">
                             {pagedComments.map((comm) => {
                                 const isCommEditing = editingCommentId === (comm.CommentId || comm.commentId);
-                                const isCommAuthor = (comm.UserId || comm.userId) === myId || isAdmin;
+                                // 🔥 [댓글도 마찬가지] 관리자 권한 빼고 본인인지 확인
+                                const isCommAuthor = (comm.UserId || comm.userId) === myId;
+
                                 return (
                                     <div key={comm.CommentId || comm.commentId} className="py-4 border-b border-slate-50 group text-left">
                                         <div className="flex justify-between items-start mb-1.5">
-                                            <div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-700">{comm.UserName || comm.userName}</span><span className="text-[10px] text-slate-300">{new Date(comm.RegDate || comm.regDate).toLocaleString()}</span></div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-slate-700">{comm.UserName || comm.userName}</span>
+                                                <span className="text-[10px] text-slate-300">{new Date(comm.RegDate || comm.regDate).toLocaleString()}</span>
+                                            </div>
                                             {isCommAuthor && !isCommEditing && (
-                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all text-[10px] font-bold text-slate-400"><button onClick={() => { setEditingCommentId(comm.CommentId || comm.commentId); setEditContent(comm.Content || comm.content); }} className="hover:text-indigo-600">수정</button><button onClick={() => handleDeleteComment(comm.CommentId || comm.commentId)} className="hover:text-red-500">삭제</button></div>
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all text-[10px] font-bold text-slate-400">
+                                                    <button onClick={() => { setEditingCommentId(comm.CommentId || comm.commentId); setEditContent(comm.Content || comm.content); }} className="hover:text-indigo-600">수정</button>
+                                                    <button onClick={() => handleDeleteComment(comm.CommentId || comm.commentId)} className="hover:text-red-500">삭제</button>
+                                                </div>
                                             )}
                                         </div>
                                         {isCommEditing ? (
-                                            <div className="mt-2 space-y-2"><textarea className="w-full border p-2 text-xs rounded h-16 resize-none bg-slate-50" value={editContent} onChange={e => setEditContent(e.target.value)} /><div className="flex justify-end gap-2"><button onClick={() => setEditingCommentId(null)} className="px-3 py-1 text-[10px] font-bold border rounded">취소</button><button onClick={() => handleUpdateComment(comm.CommentId || comm.commentId)} className="px-3 py-1 bg-slate-800 text-white text-[10px] font-bold rounded">저장</button></div></div>
+                                            <div className="mt-2 space-y-2">
+                                                <textarea className="w-full border p-2 text-xs rounded h-16 resize-none bg-slate-50" value={editContent} onChange={e => setEditContent(e.target.value)} />
+                                                <div className="flex justify-end gap-2"><button onClick={() => setEditingCommentId(null)} className="px-3 py-1 text-[10px] font-bold border rounded">취소</button><button onClick={() => handleUpdateComment(comm.CommentId || comm.commentId)} className="px-3 py-1 bg-slate-800 text-white text-[10px] font-bold rounded">저장</button></div>
+                                            </div>
                                         ) : (
                                             <p className="text-xs text-slate-600 leading-normal">{comm.Content || comm.content}</p>
                                         )}
@@ -405,21 +391,15 @@ const Issue = ({ onShowNotice, currentUser }) => {
     return (
         <div className="p-6 max-w-6xl mx-auto font-sans text-left bg-white shadow-inner min-h-screen">
             <div className="flex justify-between items-end mb-6 border-b-2 border-indigo-600 pb-3">
-                <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                    <ClipboardList size={22} />게시판
-                </h2>
+                <h2 className="text-xl font-black text-slate-800 flex items-center gap-2"><ClipboardList size={22} />게시판</h2>
                 <div className="flex items-center gap-3">
-                    <button onClick={fetchPosts} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                        <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-                    </button>
-                    <button onClick={() => setIsWriting(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-black rounded-md hover:bg-indigo-700 shadow-md active:scale-95 transition-all">
-                        <PenLine size={14} /> 글쓰기
-                    </button>
+                    <button onClick={fetchPosts} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><RefreshCw size={18} className={loading ? "animate-spin" : ""} /></button>
+                    <button onClick={() => setIsWriting(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-black rounded-md hover:bg-indigo-700 shadow-md active:scale-95 transition-all"><PenLine size={14} /> 글쓰기</button>
                 </div>
             </div>
 
             <div className="border-t border-slate-300 shadow-sm overflow-hidden bg-white min-h-[400px]">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm text-left">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[11px]">
                         <tr>
                             <th className="py-3 px-4 text-center w-20">번호</th>
@@ -439,7 +419,7 @@ const Issue = ({ onShowNotice, currentUser }) => {
                                     <td className="py-3 px-4 font-medium text-slate-700 group-hover:text-indigo-600">
                                         {type === 'NOTICE' && <span className="text-amber-600 font-black mr-2 text-[11px]">[공지]</span>}
                                         {p.Title || p.title}
-                                        <span className="ml-1.5 text-[11px] text-red-500 font-bold opacity-70">[{p.CommentCount || p.commentCount}]</span>
+                                        <span className="ml-1.5 text-[11px] text-red-500 font-bold opacity-70">[{p.CommentCount ?? p.commentCount ?? 0}]</span>
                                     </td>
                                     <td className="py-3 text-center text-slate-500">{p.UserName || p.userName}</td>
                                     <td className="py-3 text-center text-slate-400 font-mono text-[11px]">{new Date(p.RegDate || p.regDate).toLocaleDateString()}</td>
@@ -452,34 +432,47 @@ const Issue = ({ onShowNotice, currentUser }) => {
             </div>
             <Pagination currentPage={postPage} totalPages={Math.ceil(posts.length / postsPerPage)} onPageChange={setPostPage} />
         </div>
-    );
+    )
 };
-
 
 
 // --- 📊 2. Dash Component (분석 중심 대시보드) ---
 const Dash = ({ inventoryList, finishedList, defectList, onRefresh, loading }) => {
     const stats = useMemo(() => {
-        const totalProduced = finishedList.length;
-        const totalDefects = defectList.length;
+        // 1. 총 완성차 출하: length가 아니라 Qty의 합계를 구함
+        const totalProduced = finishedList.reduce((acc, cur) => acc + (cur.Qty || cur.qty || 0), 0);
+
+        // 2. 총 불량 발생: 역시 Qty의 합계를 구함
+        const totalDefects = defectList.reduce((acc, cur) => acc + (cur.Qty || cur.qty || 0), 0);
+
         const totalInbound = inventoryList.reduce((acc, cur) => acc + (cur.StockQty || cur.stockQty || 0), 0);
+
         const yieldRate = (totalProduced + totalDefects) > 0
             ? ((totalProduced / (totalProduced + totalDefects)) * 100).toFixed(1)
             : "100.0";
 
+        // 3. 최근 7일 생산 트렌드 그래프도 수량 합계로 수정
         const dailyStats = Array.from({ length: 7 }, (_, i) => {
             const d = new Date(); d.setDate(d.getDate() - i);
             const dateStr = d.toISOString().split('T')[0];
-            const qty = finishedList.filter(item => (item.InDate || item.inDate || "").startsWith(dateStr)).length;
-            return { date: dateStr.slice(5), qty };
+
+            // 해당 날짜의 모든 품목 Qty를 더함
+            const qtySum = finishedList
+                .filter(item => (item.InDate || item.inDate || "").startsWith(dateStr))
+                .reduce((acc, cur) => acc + (cur.Qty || cur.qty || 0), 0);
+
+            return { date: dateStr.slice(5), qty: qtySum };
         }).reverse();
 
+        // 4. 월별 통계도 수량 합계로 수정
         const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
         const yearStr = new Date().getFullYear().toString();
         const monthlyStats = months.map(m => {
             const prefix = `${yearStr}-${m}`;
-            const qty = finishedList.filter(item => (item.InDate || item.inDate || "").startsWith(prefix)).length;
-            return { month: `${m}월`, qty };
+            const qtySum = finishedList
+                .filter(item => (item.InDate || item.inDate || "").startsWith(prefix))
+                .reduce((acc, cur) => acc + (cur.Qty || cur.qty || 0), 0);
+            return { month: `${m}월`, qty: qtySum };
         });
 
         return { totalProduced, totalDefects, totalInbound, yieldRate, dailyStats, monthlyStats };

@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MesProject")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+53c770881d3eecd1a1bf1833253e7c8e639dd3d4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a36dce4a87e600dd1c5f0f3f4ec952848f897531")]
 [assembly: System.Reflection.AssemblyProductAttribute("MesProject")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MesProject")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
