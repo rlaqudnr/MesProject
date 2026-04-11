@@ -34,16 +34,16 @@
 
 
 ### 🖥️4. 시스템 화면
-### 1. 생산 공정 대시보드
+###  생산 공정 대시보드
 ##### <img width="1920" height="1066" alt="image" src="https://github.com/user-attachments/assets/99074cff-daee-4e31-821c-20e3b72b6063" />
 
-### 2. 재고 관리 및 수불 현황
+###  재고 관리 및 수불 현황
 ##### <img src="https://github.com/user-attachments/assets/375bba36-3043-48b9-8e91-a647aa777682" width="100%">
 
-### 3. 생산 실적 및 수율 분석
+###  생산 실적 및 수율 분석
 ##### <img src="https://github.com/user-attachments/assets/c7f32c0f-0098-452b-91dc-3ac6e0322e41" width="100%">
 
-### 5.전체 시스템 구조
+### 5. 전체 시스템 구조
 ##### <img width="2816" height="1536" alt="Gemini_Generated_Image_o273tpo273tpo273" src="https://github.com/user-attachments/assets/0272ff8d-aac7-45ea-8421-b246bb2b62db" />
 
 
