@@ -23,10 +23,15 @@
 ##### Firebase를 통해 보안성 높은 로그인을 구현했으며, 실적 데이터를 기반으로 공정 수율 및 차량 생산 통계를 실시간으로 산출합니다.
 
 ### 📜2. API 명세서
-##### <img src="https://github.com/user-attachments/assets/04b9d739-b83b-4b3d-aac9-cc34f6b1cdb8" width="100%">
+##### <img width="1196" height="896" alt="Gemini_Generated_Image_ijlyg8ijlyg8ijly (1)" src="https://github.com/user-attachments/assets/b6b1f942-5f74-4316-8b40-6b62688da22a" />
+
+
+
 
 ### 📂3. 데이터베이스 ERD
-##### <img src="https://github.com/user-attachments/assets/fe2473d9-4999-4dc2-9972-16bfa6079800" width="100%">
+##### <img width="1024" height="1027" alt="Gemini_Generated_Image_di0vnvdi0vnvdi0v" src="https://github.com/user-attachments/assets/8ea5fa03-1ac4-49b5-8070-8946442b77ec" />
+
+
 
 ### 🖥️4. 시스템 화면
 ### 1. 생산 공정 대시보드
