@@ -1,7 +1,7 @@
 # 🚀 NexMES Pro System
 # NexMES는 React와 ASP.NET Core를 바탕으로, 현장의 수주부터 생산, 재고 관리까지 실시간으로 제어하는 제조 실행 시스템입니다.
 
-## 🌐 http://nex-mes.com/
+## 🌐 http://nex-mes.com/ id : admin pw : 1234
 
 # 🛠 Tech Stack
 ### Frontend: React
